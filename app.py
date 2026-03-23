@@ -9,4 +9,4 @@ def client():
 def test_homepage(client):
     """Vérifie que la page d'accueil répond bien 200."""
     response = client.get('/')
-    assert response.status_code == 200
+    assert response.status_code == 200 
