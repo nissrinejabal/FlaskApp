@@ -3,11 +3,11 @@ name: CI Pipeline
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main] # Déclenchement aussi sur Pull Request
+  pull_request: # Déclenchement lors d'une Pull Request (Consigne TP)
+    branches: [main]
 
 jobs:
-  # JOB 1 : Exécuter les tests unitaires
+  # Job 1 : Tests unitaires
   unit-tests:
     runs-on: ubuntu-latest
     steps:
@@ -23,7 +23,7 @@ jobs:
       - name: Run tests
         run: pytest
 
-  # JOB 2 : Construction Docker en parallèle
+  # Job 2 : Construction Docker (en parallèle des tests)
   build-docker:
     runs-on: ubuntu-latest
     steps:
@@ -31,26 +31,19 @@ jobs:
       - name: Build Docker image
         run: docker build -t flask-app .
 
-  # JOB 3 : Push vers Docker Hub (uniquement si les tests réussissent)
+  # Job 3 : Push vers Docker Hub (Uniquement si les tests réussissent)
   deploy:
     runs-on: ubuntu-latest
-    needs: [unit-tests] # Condition : Les tests DOIVENT avoir réussi
-    if: github.event_name == 'push' # Optionnel : ne push que sur un vrai commit
+    needs: [unit-tests] # Condition de succès des tests (Consigne TP)
+    if: github.event_name == 'push' # Ne pousse que lors d'un push réel
     steps:
       - uses: actions/checkout@v3
-      
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Push to Multiple Registries (Docker Hub + Autre)
+      - name: Push Image
         run: |
-          # Tag et Push pour Docker Hub
           docker build -t ${{ secrets.DOCKER_USERNAME }}/flask-app:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
-          
-          # Exemple pour un second registre (ex: GitHub Packages)
-          # docker tag flask-app ghcr.io/votre-nom/flask-app:latest
-          # docker push ghcr.io/votre-nom/flask-app:latest
